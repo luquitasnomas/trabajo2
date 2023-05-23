@@ -63,7 +63,7 @@ names(data_limpia)=c("Fecha","precipitacion") #cambia el nombre de nuestras vari
 
 data_limpia
 
-#####EDA###########
+#####EDA################################################################
 ################
 es.faltante <- is.na(data_na) 
 sum(es.faltante) #datos faltantes
@@ -84,7 +84,7 @@ IQR(data_limpia$precipitacion)       #Necesita correción # lo mismo
 
 
 
-#series temporales
+####################################################series temporales#####################################################################
 #Ver si está el paquete instalado
 if (!require(hydroTSM)) {
   install.packages("hydroTSM")
@@ -97,59 +97,133 @@ date.fin <-paste0("La fecha final de la estaciónID ingresada es: ", data_limpia
 date.ini
 date.fin
 
-plot("Fecha","precipitacion")
-
-######Hasta acá funciona bien##################
-##################################################
-###################################################
 
 
 
 
-# Definir las fechas de inicio y fin
-#date_ini <- as.Date(date.ini, format = "%Y-%m-%d") "date ini ya esta en formato y-m-d
-#date_fin <- as.Date(date.fin, format = "%Y-%m-%d")
+
+
+library(hydroTSM)
+
+# Obtener la fecha inicial y final de la estación
+date.ini <-descripcionID[11,estacionID]
+date.fin <-descripcionID[12,estacionID]
+str(date.ini)
+str(date.fin)
+#Debido a que date.ini y date.fin son data frames con más de una fila. 
+#La función dip() espera recibir argumentos de clase "Date", pero en este caso, 
+#estás pasando objetos con más de una fecha.
 
 
 
-# Filtrar los datos dentro del rango de fechas
-#data_limpia <- data_limpia[data_limpia$Fecha <= date_ini & data_limpia$Fecha <= date_fin, ] #esta parte del codigo interrumpe el data_limpia
 
-datos_diarios <- data_limpia
+# Extraer las fechas individuales
+fecha_ini <- as.Date(date.ini[[1]])
+fecha_fin <- as.Date(date.fin[[1]])
 
-# Calcular las métricas diarias
-dip_diarios <- dip(datos_diarios)
-mip_diarios <- mip(datos_diarios)
-yip_diarios <- yip(datos_diarios)
+# Crear la secuencia temporal usando dip
+secuencia_diaria <- dip(from = fecha_ini, to = fecha_fin)
 
-# Convertir los datos a datos mensuales y anuales
-datos_mensuales <- aggregate(datos_diarios, by = "month")
-datos_anuales <- aggregate(datos_diarios, by = "year")
+secuencia_diaria
 
-# Calcular las métricas mensuales y anuales
-dip_mensuales <- mip(datos_mensuales)
-mip_mensuales <- mip(datos_mensuales)
-yip_mensuales <- yip(datos_mensuales)
 
-dip_anuales <- mip(datos_anuales)
-mip_anuales <- mip(datos_anuales)
-yip_anuales <- yip(datos_anuales)
+secuencia_mensual <- mip(from = fecha_ini, to = fecha_fin)
 
-# Realizar estadísticas descriptivas
-desc_diarios <- describe(datos_diarios)
-desc_mensuales <- describe(datos_mensuales)
-desc_anuales <- describe(datos_anuales)
+secuencia_mensual
 
-# Imprimir los resultados
-print(dip_diarios)
-print(mip_diarios)
-print(yip_diarios)
-print(dip_mensuales)
-print(mip_mensuales)
-print(yip_mensuales)
-print(dip_anuales)
-print(mip_anuales)
-print(yip_anuales)
-print(desc_diarios)
-print(desc_mensuales)
-print(desc_anuales)
+secuencia_anual <- yip(from = fecha_ini, to = fecha_fin)
+
+secuencia_anual
+
+
+
+###### G R A F I C O S #################################
+########################################################
+########################################################
+
+#Acá usaremos data_limpia para trabajar con el inicio_observaciones hasta fin_observaciones sin NA
+
+
+
+
+# Convertir la columna Fecha a tipo Date
+data_limpia$Fecha <- as.Date(data_limpia$Fecha)
+
+# Convertir la columna precipitacion a tipo numeric
+data_limpia$precipitacion <- as.numeric(data_limpia$precipitacion)
+str(data_limpia)
+
+
+
+#Tengo data_limpia convertida en date y numero
+#Ahoraseparo por fecha y convertida en formado adecuado Y-m-d
+Date.data_limpia<-strptime(data_limpia$Fecha, format = "%Y-%m-%d")
+Date.data_limpia
+#serietemporal
+Date.data_limpia=format(Date.data_limpia,"%Y-%m-%d")
+#Ahora se agrega las precipitaciones a la secuencia temporal diaria
+data_limpia.diaria<-aggregate(data_limpia$precipitacion, by=list(Date.data_limpia), FUN=sum)
+names(data_limpia.diaria)<-c("Date.data_limpia", "precipitacion")
+data_limpia.diaria$Date.data_limpia=as.Date(data_limpia.diaria$Date.data_limpia, "%Y-%m-%d")
+
+
+#generar secuencias temporales,  la cual es ordenada e incluye series irregulares
+data_limpia.diaria.ts=zoo(data_limpia.diaria$precipitacion, order.by = data_limpia.diaria$Date.data_limpia)
+head(data_limpia.diaria.ts)
+#graficando los datos de precipitacion
+plot(data_limpia.diaria.ts, xlab ="year", ylab="precipitation, daily in mm")
+
+
+#Graficar diaria, mensual y anual series usando hydroplot
+hydroplot(data_limpia.diaria.ts, var.type ="Precipitation", var.unit = "mm", xlab ="Time", ylab = "precipitation in mm")
+
+hydroplot()
+
+########################  FUNCIONES EDA   ##################################################
+
+Est.ID <- function(estacionID) {
+ paste("La estacion ID es" , estacionID)
+}
+Est.ID (estacionID = estacionID)
+
+
+DatosFaltantes <- function(es.faltante) {
+  paste("Los datos faltantes son", sum(es.faltante))
+}
+DatosFaltantes (es.faltante = sum(es.faltante))
+
+
+DatosValidos <- function(datos_validos) {
+  paste("Los datos validos son", sum(datos_validos))
+}
+DatosValidos (datos_validos = sum(datos_validos))
+
+
+SummaryValues <- function(summary) {
+  paste("valor" , summary(data_limpia))
+}
+SummaryValues (summary = summary(data_limpia))
+
+
+DesviacionEstandar <- function(sd) {
+  paste("la desviacion estandar es" , sd(data_limpia$precipitacion))
+}
+DesviacionEstandar (sd = sd(data_limpia$precipitacion))
+
+
+RangoIntercuantil <- function(IQR){
+  paste("El rango intercuantil es",IQR(data_limpia$precipitacion))
+}
+RangoIntercuantil(IQR = IQR(data_limpia$precipitacion) )
+
+
+
+################################# FUNCION GRAFICOS ###########################################################
+
+
+GraficosHydroTSM <- function(hydroplot){
+hydroplot("Grafico",hydroplot(data_limpia.diaria.ts, var.type ="Precipitation", var.unit = "mm", xlab ="Time", ylab = "precipitation in mm")
+)
+}
+RangoIntercuantil(plot = hydroplot(data_limpia.diaria.ts, var.type ="Precipitation", var.unit = "mm", xlab ="Time", ylab = "precipitation in mm")
+)
