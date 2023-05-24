@@ -149,6 +149,14 @@ secuencia_anual <- as.Date(secuencia_anual)
 secuencia_anual
 
 
+my.dates <- as.Date(c(secuencia_diaria))
+my.dates
+
+my.seasons <- time2season(my.dates, out.fmt = "seasons")
+
+my.seasons
+
+
 
 ######################## G R A F I C O S ##############################
 #######################################################################
@@ -234,14 +242,8 @@ RangoIntercuantil <- function(IQR){
 RangoIntercuantil(IQR = IQR(data_limpia$precipitacion) )
 
 
-
-my.dates <- as.Date(c(secuencia_diaria))
-my.dates
-
-my.seasons <- time2season(my.dates, out.fmt = "seasons")
-
-my.seasons
-
+################################## EDA ESPECIFICA ############################
+#ESTA PARTE AUN NO LA CONSIGO
 
 DatosFaltantesDiarios <- function(my.dates){
   paste("los datos faltantes de la secuencia diaria son", sum(my.dates) )
@@ -261,8 +263,5 @@ hydroplot("Grafico",hydroplot(data_limpia.diaria.ts, var.type ="Precipitation", 
 }
 RangoIntercuantil(plot = hydroplot(data_limpia.diaria.ts, var.type ="Precipitation", var.unit = "mm", xlab ="Time", ylab = "precipitation in mm")
 )
-
-
-
 
 
