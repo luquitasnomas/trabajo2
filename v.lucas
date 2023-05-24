@@ -2,7 +2,7 @@
 
 ########################  mostrar archivo  ############################
 
-{#Ver si está el paquete instalado
+#Ver si está el paquete instalado
 if (!require(readr)) {
   install.packages("readr")
 }
@@ -36,25 +36,24 @@ data_raw <- read_csv(file.choose(), col_names = TRUE)
 #ruta al archivo csv y datos generales del csv
 ls()
 head(data_raw)
-}
+
 
 #### Leer el código de identificación de la estación pluviométrica ####
 
-{
+
 estacionID<-readline(prompt = "Ingrese el código de identificación de la estación pluviométrica: ")
 estacionID #Notar que ya lo guarda como " " 
-}
+
 
 ########## mostrar la informacion general de la Estación ID ###########
 
-{descripcionID <- data_raw[1:14, c("codigo_estacion", estacionID)]
+descripcionID <- data_raw[1:14, c("codigo_estacion", estacionID)]
 
 descripcionID
-}
 
 #ahora se selecciona las mediciones de la base de datos para hacer EDA#
 
-{
+
 data_elegida<-data_raw[-c(1:14), c("codigo_estacion", estacionID)]#Descarta las primeras catorce filas
 #y las fechas con los datos de la columna estacionID
 data_na<- replace(data_elegida, data_elegida == -9999, NA) #cambia los -9999 por NA
@@ -70,11 +69,11 @@ data_limpia <- na.omit(data_limpia) # en df data_limpia se limpia usando na.omit
 names(data_limpia)=c("Fecha","precipitacion") #cambia el nombre de nuestras variables por unas mas acorde
 
 data_limpia
-}
+
 
 ########################       EDA         ############################
 
-{
+
 es.faltante <- is.na(data_na) 
 sum(es.faltante) #datos faltantes
 
@@ -91,11 +90,11 @@ summary(data_limpia)
 sd(data_limpia$precipitacion)        #Necesita correción #lo que hay que ingresar es la variable precipitacion ya antes nombrada
 
 IQR(data_limpia$precipitacion)       #Necesita correción # lo mismo
-}
+
 
 ######################## SERIES TEMPORALES ############################
 
-{
+
 #Ver si está el paquetehydroTSM instalado{
 if (!require(hydroTSM)) {
   install.packages("hydroTSM")
@@ -135,21 +134,26 @@ fecha_fin <- as.Date(date.fin[[1]])
 # Crear la secuencia temporal usando dip, mip y yip
 
 secuencia_diaria <- dip(from = fecha_ini, to = fecha_fin)
+secuencia_diaria <- as.Date.character(secuencia_diaria)
+
 secuencia_diaria
 
-
 secuencia_mensual <- mip(from = fecha_ini, to = fecha_fin)
+secuencia_mensual <- as.Date(secuencia_mensual)
+
 secuencia_mensual
 
 secuencia_anual <- yip(from = fecha_ini, to = fecha_fin)
+secuencia_anual <- as.Date(secuencia_anual)
+
 secuencia_anual
 
-}
+
 
 ######################## G R A F I C O S ##############################
 #######################################################################
 
-{
+
 #Acá usaremos data_limpia para trabajar con el inicio_observaciones hasta fin_observaciones sin NA
 
 
@@ -188,11 +192,11 @@ plot(data_limpia.diaria.ts, xlab ="year", ylab="precipitation, daily in mm")
 hydroplot(data_limpia.diaria.ts, var.type ="Precipitation", var.unit = "mm", xlab ="Time", ylab = "precipitation in mm")
 
 hydroplot()
-}
+
 
 ########################  FUNCIONES EDA   #############################
 
-{
+
 
 Est.ID <- function(estacionID) {
  paste("La estacion ID es" , estacionID)
@@ -230,22 +234,35 @@ RangoIntercuantil <- function(IQR){
 RangoIntercuantil(IQR = IQR(data_limpia$precipitacion) )
 
 
-DatosFaltantesDiarios <- function(secuencia_diaria){
-  paste("los datos faltantes de la secuencia diaria son", sum(secuencia_diaria) )
+
+my.dates <- as.Date(c(secuencia_diaria))
+my.dates
+
+my.seasons <- time2season(my.dates, out.fmt = "seasons")
+
+my.seasons
+
+
+DatosFaltantesDiarios <- function(my.dates){
+  paste("los datos faltantes de la secuencia diaria son", sum(my.dates) )
 }
-DatosFaltantesDiarios(secuencia_diaria = sum(secuencia_diaria))
+DatosFaltantesDiarios(my.dates = sum(my.dates))
 
 es.faltantediario <- is.na(secuencia_diaria) 
 sum(es.faltantediario) #datos faltantes
-}
+
 
 ######################## FUNCION GRAFICOS #############################
 
-{
+
 GraficosHydroTSM <- function(hydroplot){
 hydroplot("Grafico",hydroplot(data_limpia.diaria.ts, var.type ="Precipitation", var.unit = "mm", xlab ="Time", ylab = "precipitation in mm")
 )
 }
 RangoIntercuantil(plot = hydroplot(data_limpia.diaria.ts, var.type ="Precipitation", var.unit = "mm", xlab ="Time", ylab = "precipitation in mm")
 )
-}
+
+
+
+
+
